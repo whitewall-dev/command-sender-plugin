@@ -1,49 +1,51 @@
+/* eslint-disable */
 import React, { useRef, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { getIn } from 'formik';
 
 const Input = ({
+    type,
     name,
     label,
     placeholder,
     icon,
     value,
-    helperMessage,
-    errorMessage,
-    minLength = 0,
-    maxLength = 0,
+    helper_message,
+    error_message,
+    min_length,
+    max_length,
     danger = false,
     focused = false,
-    waitTime = 500,
-    textareaCols = 0,
-    textareaRows = 0,
-    isTextarea = false,
+    wait_time = 500,
+    textarea_cols = 0,
+    textarea_rows = 0,
+    is_textarea = false,
     errors = {},
     touched = {},
-    onFocus,
-    onBlur,
-    onChange
+    onFocus = () => { },
+    onBlur = () => { },
+    onChange = () => { }
 }) => {
-    const blipInputRef = useRef(null);
+    const blip_input_ref = useRef(null);
     const [error, setError] = useState('');
     let time = null;
 
     useEffect(() => {
-        const { current } = blipInputRef;
+        const { current } = blip_input_ref;
         current.addEventListener('bdsChange', handleChange);
-        current.addEventListener('bdsFocus', onFocus);
-        current.addEventListener('bdsOnBlur', onBlur);
+        current.addEventListener('bdsFocus', (e) => onFocus(e));
+        current.addEventListener('bdsOnBlur', (e) => onBlur(e));
 
         return () => {
             current.removeEventListener('bdsChange', handleChange);
-            current.removeEventListener('bdsFocus', onFocus);
-            current.removeEventListener('bdsOnBlur', onBlur);
+            current.removeEventListener('bdsFocus', (e) => onFocus(e));
+            current.removeEventListener('bdsOnBlur', (e) => onBlur(e));
         };
         // eslint-disable-next-line
-	}, []);
+    }, []);
 
     useEffect(() => {
-        const { current } = blipInputRef;
+        const { current } = blip_input_ref;
         if (!!focused && !!current) {
             current.setFocus();
         }
@@ -59,48 +61,50 @@ const Input = ({
 
     const handleChange = (e) => {
         clearTimeout(time);
-        time = setTimeout(() => onChange(e), waitTime);
+        time = setTimeout(() => onChange(e), wait_time);
     };
 
     return (
         <div className="relative">
             <bds-input
+                type={type || "text"}
                 data-testid="bds-input"
-                ref={blipInputRef}
+                ref={blip_input_ref}
                 input-name={name}
                 label={label}
                 placeholder={placeholder}
                 icon={icon}
                 value={value}
-                helper-message={helperMessage}
+                helper-message={helper_message}
                 danger={!!error || danger}
-                error-message={error || errorMessage}
-                minlength={minLength}
-                maxlength={maxLength}
-                cols={textareaCols}
-                rows={textareaRows}
-                is-textarea={isTextarea}
+                error-message={error || error_message || undefined}
+                minlength={min_length}
+                maxlength={max_length}
+                cols={textarea_cols}
+                rows={textarea_rows}
+                is-textarea={is_textarea}
             />
         </div>
     );
 };
 
 Input.propTypes = {
+    type: PropTypes.string,
     name: PropTypes.string,
     label: PropTypes.string,
     placeholder: PropTypes.string,
     icon: PropTypes.string,
     value: PropTypes.string,
-    helperMessage: PropTypes.string,
-    errorMessage: PropTypes.string,
-    minLength: PropTypes.number,
-    maxLength: PropTypes.number,
+    helper_message: PropTypes.string,
+    error_message: PropTypes.string,
+    min_length: PropTypes.number,
+    max_length: PropTypes.number,
     danger: PropTypes.bool,
     focused: PropTypes.bool,
-    waitTime: PropTypes.number,
-    textareaCols: PropTypes.number,
-    textareaRows: PropTypes.number,
-    isTextarea: PropTypes.bool,
+    wait_time: PropTypes.number,
+    textarea_cols: PropTypes.number,
+    textarea_rows: PropTypes.number,
+    is_textarea: PropTypes.bool,
     errors: PropTypes.object,
     touched: PropTypes.object,
     onFocus: PropTypes.func,
