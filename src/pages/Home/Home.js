@@ -9,26 +9,38 @@ const PAGE_ICON = 'plugin';
 const BLANK = '_blank';
 
 const Home = () => {
+    const [isLoading, setIsLoading] = React.useState(false);
     const [to, setTo] = React.useState('');
     const [method, setMethod] = React.useState('');
     const [uri, setUri] = React.useState('');
+    const [type, setType] = React.useState('');
+    const [resource, setResource] = React.useState('');
     const [response, setResponse] = React.useState();
 
     const executeCommand = async () => {
         const command = {
             to,
             method,
+            type,
+            resource,
             uri
         };
 
-        const message = await IframeMessageProxy.sendMessage({
-            action: 'sendCommand',
-            content: {
-                command
-            }
-        });
+        setIsLoading(true);
+        try {
+            const message = await IframeMessageProxy.sendMessage({
+                action: 'sendCommand',
+                content: {
+                    command
+                }
+            });
 
-        setResponse(message.response);
+            setResponse(JSON.stringify(message.response, undefined, 2));
+        } catch (error) {
+            setResponse(JSON.stringify(JSON.parse(error), undefined, 2));
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -69,14 +81,41 @@ const Home = () => {
                                     onChange={(e) => setUri(e.target.value)}
                                 />
                             </div>
+                            {method?.toLowerCase() === 'set' && (
+                                <>
+                                    <div className="mt2">
+                                        <Input
+                                            name="type"
+                                            label="Type"
+                                            placeholder="application/vnd.iris.contact+json"
+                                            value={type}
+                                            onChange={(e) => setType(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="mt2">
+                                        <Input
+                                            name="resource"
+                                            label="Resource"
+                                            placeholder='{"name": "John Doe"}'
+                                            value={resource}
+                                            onChange={(e) => setResource(e.target.value)}
+                                            is_textarea
+                                            textarea_rows={5}
+                                        />
+                                    </div>
+                                </>
+                            )}
                             <div className="mt2 flex justify-end">
                                 <Button
+                                    disabled={isLoading || !to || !method || !uri}
                                     onClick={executeCommand}
                                     text="Send" />
                             </div>
-                            <pre>
-                                {response}
-                            </pre>
+                            {isLoading ? <div className="mt2">Executando comando...</div> : (
+                                <pre>
+                                    {response}
+                                </pre>
+                            )}
                         </div>
                     </Card>
                 </div>
