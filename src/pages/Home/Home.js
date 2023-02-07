@@ -15,14 +15,55 @@ const Home = () => {
     const [uri, setUri] = React.useState('');
     const [type, setType] = React.useState('');
     const [resource, setResource] = React.useState('');
+    const [typedResource, setTypedResource] = React.useState('');
     const [response, setResponse] = React.useState();
+    const [isValidCommand, setIsValidCommand] = React.useState(true);
+
+    React.useEffect(() => {
+        if (type.endsWith('json')) {
+            try {
+                setTypedResource(JSON.parse(resource));
+            } catch (err) {
+                setTypedResource(resource);
+            }
+        } else {
+            setTypedResource(resource);
+        }
+    }, [type, resource]);
+
+    React.useEffect(() => {
+        if (to && method && uri) {
+            if (method.toLowerCase() === 'set') {
+                if (type && resource) {
+                    if (type.endsWith('json')) {
+                        if (typeof typedResource === 'object') {
+                            setIsValidCommand(true);
+                            return;
+                        }
+                    } else {
+                        setIsValidCommand(true);
+                        return;
+                    }
+                }
+            } else {
+                setIsValidCommand(true);
+                return;
+            }
+        }
+
+        setIsValidCommand(false);
+    }, [to, method, uri, type, resource, typedResource]);
 
     const executeCommand = async () => {
+        if (!isValidCommand) {
+            return;
+        }
+
         const command = {
             to,
             method,
-            type,
-            resource,
+            type: method === 'set' ? type : undefined,
+            resource: method === 'set' ? typedResource : undefined,
             uri
         };
 
@@ -35,7 +76,7 @@ const Home = () => {
                 }
             });
 
-            setResponse(JSON.stringify(message.response, undefined, 2));
+            setResponse(JSON.stringify(message.response, undefined, 2) || 'Success!');
         } catch (error) {
             setResponse(JSON.stringify(JSON.parse(error), undefined, 2));
         } finally {
@@ -87,7 +128,7 @@ const Home = () => {
                                         <Input
                                             name="type"
                                             label="Type"
-                                            placeholder="application/vnd.iris.contact+json"
+                                            placeholder="application/vnd.lime.contact+json"
                                             value={type}
                                             onChange={(e) => setType(e.target.value)}
                                         />
@@ -96,6 +137,7 @@ const Home = () => {
                                         <Input
                                             name="resource"
                                             label="Resource"
+                                            danger={type.endsWith('json') && typeof typedResource !== 'object'}
                                             placeholder='{"name": "John Doe"}'
                                             value={resource}
                                             onChange={(e) => setResource(e.target.value)}
@@ -107,7 +149,7 @@ const Home = () => {
                             )}
                             <div className="mt2 flex justify-end">
                                 <Button
-                                    disabled={isLoading || !to || !method || !uri}
+                                    disabled={!isValidCommand}
                                     onClick={executeCommand}
                                     text="Send" />
                             </div>
